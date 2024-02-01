@@ -1,0 +1,215 @@
+---
+title: "Health Insurance Coverage"
+author: "Hanxi Gu"
+date: "2024-01-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction to the dataset
+The health insurance coverage data was compiled from the US Department of Health and Human Services and US Census Bureau.
+
+The Affordable Care Act (ACA) is the name for the comprehensive health care reform law and its amendments which addresses health insurance coverage, health care costs, and preventive care. The law was enacted in two parts: The Patient Protection and Affordable Care Act was signed into law on March 23, 2010 by President Barack Obama and was amended by the Health Care and Education Reconciliation Act on March 30, 2010.
+
+This dataset provides health insurance coverage data for each state and the nation as a whole, including variables such as the uninsured rates before and after Obamacare, estimates of individuals covered by employer and marketplace healthcare plans, and enrollment in Medicare and Medicaid programs.
+
+# Project objectives
+The project is aimed at self-studying the impact of the  Affordable Care Act.
+
+# Data processing
+
+```{r}
+# Package loading
+library(tidyverse)
+library(sf)
+library(tmap)
+library(tmaptools)
+library(corrplot)
+```
+
+```{r}
+# Data loading
+df = read_csv("aca data.csv")
+df
+```
+```{r}
+# Rename column
+names(df)[names(df) == "Uninsured Rate (2010)"] <- "Unin_Rate_2010"
+names(df)[names(df) == "Uninsured Rate (2015)"] <- "Unin_Rate_2015"
+names(df)[names(df) == "Uninsured Rate Change (2010-2015)"] <- "Unin_Rate_Change_2010_2015"
+names(df)[names(df) == "Health Insurance Coverage Change (2010-2015)"] <- "Health_In_Co_Change_2010_2015"
+names(df)[names(df) == "Employer Health Insurance Coverage (2015)"] <- "Ep_Health_In_Co_2015"
+names(df)[names(df) == "Marketplace Health Insurance Coverage (2016)"] <- "Mp_Health_In_Co_2016"
+names(df)[names(df) == "Marketplace Tax Credits (2016)"] <- "Mp_Tax_Credits_2016"
+names(df)[names(df) == "Average Monthly Tax Credit (2016)"] <- "Avg_Monthly_Tax_Credit_2016"
+names(df)[names(df) == "State Medicaid Expansion (2016)"] <- "State_Medic_Exp_2016"
+names(df)[names(df) == "Medicaid Enrollment (2013)"] <- "Medicd_Enrol_2013"
+names(df)[names(df) == "Medicaid Enrollment (2016)"] <- "Medicd_Enrol_2016"
+names(df)[names(df) == "Medicaid Enrollment Change (2013-2016)"] <- "Medicd_Enrol_2013_2016"
+names(df)[names(df) == "Medicare Enrollment (2016)"] <- "Medicr_Enrol_2016"
+```
+
+```{r}
+# Factors/Measures conversion
+df[, c("Unin_Rate_2010", "Unin_Rate_2015", "Unin_Rate_Change_2010_2015")] <- lapply(df[, c("Unin_Rate_2010", "Unin_Rate_2015", "Unin_Rate_Change_2010_2015")], function(x) as.numeric(sub("%", "", x))/100)
+
+df$Avg_Monthly_Tax_Credit_2016 <- as.numeric(sub("\\$", "", df$Avg_Monthly_Tax_Credit_2016))
+
+df$State_Medic_Exp_2016 <- as.numeric(df$State_Medic_Exp_2016)
+```
+
+```{r}
+# Drop the last row since it is the total of united states
+df <- df[-nrow(df), ]
+```
+
+
+```{r}
+# Dataframe display after conversion
+df
+```
+
+```{r}
+# Data inspection
+# Statistics function
+summarize_numeric = function(dataset) {
+  
+  dataset = select_if(dataset, is.numeric)
+  summary.table = data.frame(Attribute = names(dataset))
+  
+  summary.table = summary.table %>% 
+    mutate("Missing Values" = apply(dataset, 2, function (x) sum(is.na(x))),
+           "Unique Values" = apply(dataset, 2, function (x) length(unique(x))),
+           "Mean" = colMeans(dataset, na.rm = TRUE),
+           "Min" = apply(dataset, 2, function (x) min(x, na.rm = TRUE)),
+           "Max" = apply(dataset, 2, function (x) max(x, na.rm = TRUE)),
+           "SD" = apply(dataset, 2, function (x) sd(x, na.rm = TRUE))
+    )
+  summary.table
+}
+
+# Statistics display
+summarize_numeric(df)
+```
+
+There is no missing value in the dataframe. The statistics shows that the uninsurance rate across the states has declined over the five years from 2010. More than half of the states expanded their state medicares in 2016. The number of medicaid enrollment has increased on average between 2013 and 2016.
+
+```{r}
+# Outlier detection using Z-Score
+# Function
+detect_outliers <- function(column) {
+  z_scores <- scale(column)
+  abs_z_scores <- abs(z_scores)
+  outliers <- abs_z_scores > 3
+  return(outliers)
+}
+
+# Apply the function to all numeric columns
+numeric_columns <- sapply(df, is.numeric)
+outliers_df <- df[, numeric_columns]
+
+outliers_indices <- logical(0)
+
+for (col in names(outliers_df)) {
+  outliers_indices <- outliers_indices | detect_outliers(outliers_df[[col]])
+}
+
+# Check if there are any outliers
+if (any(outliers_indices)) {
+  outliers_data <- df[outliers_indices, ]
+  print(outliers_data)
+} else {
+  cat("No outliers detected in any numeric column.")
+}
+```
+
+# Data Analysis
+
+###### Which states observed the greatest decline in their uninsured rate?
+
+```{r}
+# Load a shapefile of US states
+states_shapefile <- st_read("/Users/guhanxi/Desktop/Health Insurance Project/tl_2023_us_state")
+
+# Merge the shapefile
+merged_data <- merge(states_shapefile, df, by.x = "NAME", by.y = "State")
+
+# Plot the interactive heatmap
+tmap_mode("view")
+tm_shape(merged_data) +
+  tm_borders() +
+  tm_fill("Unin_Rate_Change_2010_2015", palette = "RdYlGn", title = "Uninsured Rate Change 2010-2015")
+```
+
+```{r}
+# Finding the most impacted state by ACA
+subset(df, Unin_Rate_Change_2010_2015 == min(df$Unin_Rate_Change_2010_2015), select = c("State", "Unin_Rate_Change_2010_2015"))
+```
+
+```{r}
+# Finding the least impacted state by ACA
+subset(df, Unin_Rate_Change_2010_2015 == max(df$Unin_Rate_Change_2010_2015), select = c("State", "Unin_Rate_Change_2010_2015"))
+```
+
+The two methods suggest that among all the states, Oregon and Nevada citizens are most impacted by the ACA with around 10.3% decrease in uninsured rate. While Maine and Massachusetts are impacted the least with the change only at around -1.6%. The differences could be related to medicaid expansion, state policies, state's insurance market dynamics, or demographic variations.
+
+
+###### Has ACA effectively changed the uninsured rate?
+
+
+```{r}
+# Using t test to examine if the difference is significant
+t.test(df$Unin_Rate_2010, df$Unin_Rate_2015, paired = TRUE)
+```
+It indicates that there is a statistically significant differences between the uninsured rate of 2010 and 2015, which means the ACA has effectively changed the uninsured rate.
+
+```{r}
+# Using computational method to examine if the differences are significant
+obs_var <- var(tapply(df$Unin_Rate_Change_2010_2015, df$State, mean))
+
+# Permute and compute test statistics
+set.seed(1)
+vars <- replicate(10000, {
+  # Shuffle the bills
+  shuffled_total_purchase <- sample(df$Unin_Rate_Change_2010_2015)
+  # Assign them back to the original data frame (maintaining sample sizes but ignoring labels)
+  df$Shuffled_Total_Purchase <- shuffled_total_purchase
+  # Compute the variance in means for the permuted data
+  var(tapply(df$Shuffled_Total_Purchase, df$State, mean))
+})
+
+# Compute p-value
+p_value <- mean(vars >= obs_var)
+p_value
+```
+
+Using the computational method, we learn that there is no statistically significant differences of the changes in the uninsured rate among different states. 
+
+###### What are the statistically significant factors leading to the medicaid enrolment of 2016?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+# Correlation plot
+numeric_df <- df[, sapply(df, is.numeric)]
+correlation_matrix <- cor(numeric_df)
+par(mfrow = c(1, 1))
+corrplot(correlation_matrix, method = "square", order = "hclust", tl.col = "black", tl.srt = 45, addrect = 4, col = COL2('RdBu'), addCoef.col = 'grey50', number.cex = 0.7)
+```
+To investigate the Medicd_Enrol_2016 and avoid collinearity, Mp_Health_In_Co_2016 and Medicr_Enrol_2016 are selected to build a OLS model.
+
+```{r}
+# Fit an OLS model
+model <- lm(Medicd_Enrol_2016 ~ Mp_Health_In_Co_2016 + Medicr_Enrol_2016, data = df)
+
+# Display the summary of the model
+summary(model)
+```
+The coefficient for Mp_Health_In_Co_2016 is -2.211. This suggests that for a one-unit increase in Mp_Health_In_Co_2016, the Medicd_Enrol_2016 is expected to decrease by approximately 2.211 units, holding other variables constant.
+
+The coefficient for Medicr_Enrol_2016 is 2.124. This suggests that for a one-unit increase in Medicr_Enrol_2016, the Medicd_Enrol_2016 is expected to increase by approximately 2.124 units, holding other variables constant.
+
+The p-values associated with the coefficients are all all < 0.001, indicating that each predictor variable is statistically significant in predicting Medicd_Enrol_2016.
+
+The adjusted R-squared is 0.9018, suggesting that approximately 90.18% of the variability in Medicd_Enrol_2016 is explained by the model and indicating a good overall model fit.
