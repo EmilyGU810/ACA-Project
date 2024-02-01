@@ -12,4 +12,5 @@ The project is aimed at self-studying the impact of the Affordable Care Act.
 
 ## Content
 The original dataset, R-markdown, and HTML version are included in this GitHub repository. You can use the HTML version for easier access to the interactive heatmap.
+
 <img width="691" alt="Screenshot 2024-02-01 at 3 21 11 PM" src="https://github.com/EmilyGU810/ACA-Project/assets/130021542/f3b0ccdc-dabb-4154-8c9c-515744d12868">
