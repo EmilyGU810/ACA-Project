@@ -1,7 +1,8 @@
 # ACA-Project
 
 ## ⚠️Instruction
-The original dataset, R-markdown, and HTML version are included in this GitHub repository. **_You can click on the HTML file and then download it by clicking on the top right icon_**:
+The original dataset, R-markdown, and HTML version are included in this GitHub repository. 
+$${\color{red}You can click on the HTML file and then download it by clicking on the top right icon}$$
 
 <img width="1430" alt="Screenshot 2024-02-01 at 4 05 51 PM" src="https://github.com/EmilyGU810/ACA-Project/assets/130021542/ebe0d9bf-86bb-4ff9-83be-be256eb89560">
 
