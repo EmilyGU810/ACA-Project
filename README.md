@@ -2,11 +2,12 @@
 
 ## ⚠️Instruction
 The original dataset, R-markdown, and HTML version are included in this GitHub repository. 
-${\textsf{\color{red}You \space can \space click \space on \space the \space HTML \space file \space and \space then \space download \space it \space by \space clicking \space on \space the \space top \space right \space icon}}$
+${\color{red}You \space can \space click \space on \space the \space HTML \space file \space and \space then \space download \space it \space by \space clicking \space on \space the \space top \space right \space icon.}$
 
 <img width="1430" alt="Screenshot 2024-02-01 at 4 05 51 PM" src="https://github.com/EmilyGU810/ACA-Project/assets/130021542/ebe0d9bf-86bb-4ff9-83be-be256eb89560">
 
-**_Please then open it in your local download folder._** It will provide easier access to the code and the interactive heatmap.
+${\color{red}Please\spacethen\spaceopen\spaceit\spacein\spaceyour\spacelocal\spacedownload\spacefolder.}$
+It will provide easier access to the code and the interactive heatmap.
 
 <img width="691" alt="Screenshot 2024-02-01 at 3 21 11 PM" src="https://github.com/EmilyGU810/ACA-Project/assets/130021542/f3b0ccdc-dabb-4154-8c9c-515744d12868">
 
