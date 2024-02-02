@@ -99,7 +99,7 @@ summarize_numeric = function(dataset) {
 summarize_numeric(df)
 ```
 
-The statistics show that the uninsurance rate across the states has declined over the five years from 2010. More than half of the states expanded their state medicares in 2016. The number of Medicaid enrollments has increased, on average, between 2013 and 2016.
+The statistics show that the uninsured rate across the states has declined over the five years from 2010. More than half of the states expanded their state medicares in 2016. The number of Medicaid enrollments has increased, on average, between 2013 and 2016.
 
 ```{r}
 # Missing value treatment using mean
